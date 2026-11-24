@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open-Wheel Grand Prix</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="garagePreview" aria-hidden="true"></div>
+  <div id="app"></div>
+
+  <section id="menu" data-active-page="home">
+    <main class="menu-pages">
+      <!-- HOME SCREEN -->
+      <section id="pageHome" class="menu-page active">
+        <div class="home-title">
+          <h1>Open Wheel</h1>
+          <span>Grand Prix</span>
+        </div>
+
+        <nav class="home-buttons" aria-label="Main menu">
+          <button id="start" class="home-btn" type="button">Play</button>
+          <button class="home-btn" data-page="garage" type="button">Workshop</button>
+          <button class="home-btn" data-page="settings" type="button">Settings</button>
+          <button id="aboutBtn" class="home-btn" type="button">About</button>
+        </nav>
+
+        <div class="home-version">v1.0.0</div>
+      </section>
+
+      <!-- WORKSHOP -->
+      <section id="pageGarage" class="menu-page">
+        <button class="back-btn" data-page="home" type="button">← BACK</button>
+        <div class="section-heading">
+          <h2>TEAM WORKSHOP</h2>
+        </div>
+        <div class="glass-panel garage-form">
+          <div class="garage-id">
+            <label>DRIVER<input id="driver" maxlength="18" value="A. Driver" /></label>
+            <label>TEAM<input id="team" maxlength="22" value="Apex Works" /></label>
+            <label>DRIVER NUMBER<input id="driverNumber" type="number" min="1" max="99" value="7" /></label>
+            <label>PRESET LIVERY
+              <select id="presetLivery">
+                <option value="custom">Custom</option>
+                <option value="volt">Volt Racing</option>
+                <option value="scuderia">Scuderia Red</option>
+                <option value="ocean">Oceanic Blue</option>
+                <option value="midnight">Midnight Gold</option>
+              </select>
+            </label>
+            <label>PAINT FINISH
+              <select id="paintFinish">
+                <option value="gloss">Gloss</option>
+                <option value="matte">Matte</option>
+                <option value="metallic">Metallic</option>
+              </select>
+            </label>
+            <label>SPONSOR LOGO
+              <select id="sponsorLogo">
+                <option value="APEX">APEX</option>
+                <option value="VOLT">VOLT</option>
+                <option value="AEROX">AERO-X</option>
+                <option value="TURBO">TURBO</option>
+              </select>
+            </label>
+          </div>
+          <div class="livery-colors">
+            <label>PRIMARY BODY<input id="cPrimary" type="color" value="#e03a3e" /></label>
+            <label>SECONDARY AERO<input id="cSecondary" type="color" value="#f4f6f8" /></label>
+            <label>HALO<input id="cHalo" type="color" value="#20252c" /></label>
+            <label>RIM ACCENTS<input id="cRims" type="color" value="#f4f6f8" /></label>
+            <label>HELMET<input id="cHelmet" type="color" value="#ffc400" /></label>
+          </div>
+          <div class="garage-foot">
+            <span>LIVE 3D PREVIEW · AUTO-SAVED</span>
+            <button data-page="home" class="small-action" type="button">DONE</button>
+          </div>
+        </div>
+        <button class="page-start" id="garageStart" type="button">TAKE THIS CAR TO THE GRID ↗</button>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="pageSettings" class="menu-page">
+        <button class="back-btn" data-page="home" type="button">← BACK</button>
+        <div class="section-heading">
+          <p class="eyebrow">RACE CONTROL</p>
+          <h2>SETTINGS</h2>
+          <p>Choose your Grand Prix circuit, view, controls, and performance profile.</p>
+        </div>
+        <div class="settings-grid">
+          <section class="glass-panel settings-card">
+            <h3>RACE WEEKEND</h3>
+            <div class="form-grid">
+              <label>CIRCUIT
+                <select id="trackSelect">
+                  <option value="monza">Monza · 5.793 km</option>
+                  <option value="monaco">Monaco · 3.337 km</option>
+                  <option value="spa">Spa-Francorchamps · 7.004 km</option>
+                  <option value="interlagos">Interlagos · 4.309 km</option>
+                  <option value="suzuka">Suzuka · 5.807 km</option>
+                </select>
+              </label>
+              <label>WEATHER
+                <select id="weatherSelect">
+                  <option value="dry">Dry</option>
+                  <option value="changeable">Changeable (Sector Rain)</option>
+                  <option value="wet">Wet</option>
+                </select>
+              </label>
+              <label>RACE DISTANCE
+                <select id="lapsSelect">
+                  <option value="3">3 laps · Sprint</option>
+                  <option value="5">5 laps · Grand Prix</option>
+                </select>
+              </label>
+              <label>START POSITION
+                <select id="startMode">
+                  <option value="grid" selected>Grid Start</option>
+                  <option value="pitlane">Pitlane Start (Penalty)</option>
+                </select>
+              </label>
+              <label>STARTING FUEL
+                <select id="fuelSelect">
+                  <option value="25">25 kg · light</option>
+                  <option value="40" selected>40 kg · balanced</option>
+                  <option value="55">55 kg · heavy</option>
+                </select>
+              </label>
+              <label>STARTING TYRES
+                <select id="tyreSelect">
+                  <option value="soft">Soft · high grip</option>
+                  <option value="medium" selected>Medium · balanced</option>
+                  <option value="hard">Hard · long life</option>
+                </select>
+              </label>
+              <label>CONTROLS
+                <select id="controlsMode">
+                  <option value="both">Keyboard + touch</option>
+                  <option value="keyboard">Keyboard / wheel</option>
+                  <option value="touch">Touch layout</option>
+                </select>
+              </label>
+            </div>
+          </section>
+          <section class="glass-panel settings-card">
+            <h3>CAMERA, AUDIO &amp; HANDLING</h3>
+            <label>MONITOR SIZE <output id="monitorValue">24 in</output><input id="screenSize" type="number" min="13" max="49" value="24" step="1"></label>
+            <label>EYE DISTANCE <output id="distanceValue">65 cm</output><input id="viewDistance" type="number" min="30" max="180" value="65" step="1"></label>
+            <label>BASE FOV <output id="fovValue">44°</output><input id="baseFov" type="range" min="35" max="50" value="44"></label>
+            <label>G-FORCE CAMERA <output id="gForceValue">1.0×</output><input id="gForce" type="range" min="0" max="2" value="1" step="0.1"></label>
+            <label>STEERING SENSITIVITY <output id="steeringValue">1.00×</output><input id="steeringSensitivity" type="range" min="0.5" max="1.5" value="1" step="0.05"></label>
+            <label>GRAPHICS QUALITY
+              <select id="quality">
+                <option value="low">Low · performance</option>
+                <option value="medium">Medium · balanced</option>
+                <option value="high" selected>High · full stadium</option>
+              </select>
+            </label>
+            <label>MASTER VOLUME <output id="volumeValue">65%</output><input id="audioVolume" type="range" min="0" max="1" value="0.65" step="0.05"></label>
+            <button id="muteAudio" class="small-action" type="button" aria-pressed="false">MUTE AUDIO</button>
+          </section>
+        </div>
+        <p class="keys settings-keys">W/S accelerate &amp; brake · A/D steer · C cycle Cockpit / T-Cam · X DRS · E ERS · R reset · M pit · SPACE pitstop timing</p>
+      </section>
+    </main>
+  </section>
+
+  <!-- About Modal -->
+  <section id="aboutModal" class="modal gone" aria-modal="true" role="dialog" aria-labelledby="aboutTitle">
+    <div class="panel">
+      <p class="eyebrow">OPEN-WHEEL GRAND PRIX</p>
+      <h1 id="aboutTitle">ABOUT</h1>
+      <p class="sub">Single-player 3D open-wheel racing featuring 5 real-world Grand Prix circuits, custom liveries, dynamic sector rain, manual pitstops, and cockpit/T-cam views.</p>
+      <p class="keys">Controls: W/S throttle &amp; brake · A/D steer · C camera · X DRS · E ERS · M pit · ESC pause</p>
+      <button id="closeAboutModal" type="button">CLOSE</button>
+    </div>
+  </section>
+
+  <!-- Circuit Selection Popup -->
+  <section id="circuitModal" class="modal gone" aria-modal="true" role="dialog" aria-labelledby="circuitModalTitle">
+    <div class="circuit-modal-card">
+      <div class="circuit-modal-header">
+        <div>
+          <p class="eyebrow">2026 GRAND PRIX CALENDAR</p>
+          <h2 id="circuitModalTitle">CHOOSE YOUR CIRCUIT</h2>
+        </div>
+        <button id="closeCircuitModal" class="circuit-close-btn" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="circuit-grid" id="circuitGrid">
+        <button class="circuit-card" data-track="monza" type="button">
+          <span class="circuit-tag">ITALY · 5.793 KM</span>
+          <strong>Autodromo Nazionale Monza</strong>
+          <small>High-speed straights &amp; heavy chicanes</small>
+        </button>
+        <button class="circuit-card" data-track="monaco" type="button">
+          <span class="circuit-tag">MONACO · 3.337 KM</span>
+          <strong>Circuit de Monaco</strong>
+          <small>Tight, narrow city street circuit</small>
+        </button>
+        <button class="circuit-card" data-track="spa" type="button">
+          <span class="circuit-tag">BELGIUM · 7.004 KM</span>
+          <strong>Circuit de Spa-Francorchamps</strong>
+          <small>Long, flowing mountain circuit</small>
+        </button>
+        <button class="circuit-card" data-track="interlagos" type="button">
+          <span class="circuit-tag">BRAZIL · 4.309 KM</span>
+          <strong>Interlagos (São Paulo)</strong>
+          <small>Short, punchy counterclockwise lap</small>
+        </button>
+        <button class="circuit-card" data-track="suzuka" type="button">
+          <span class="circuit-tag">JAPAN · 5.807 KM</span>
+          <strong>Suzuka International</strong>
+          <small>Technical figure-eight layout</small>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <div id="hud" hidden>
+    <div id="lights"><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="timing">
+      <div><span>Lap</span><b id="lap">1</b></div>
+      <div><span>Position</span><b id="position">1 / 6</b></div>
+      <div><span>Time</span><b id="cur">0:00.000</b></div>
+      <div><span>Last</span><b id="last">–:––.–––</b></div>
+      <div><span>Best</span><b id="best" class="purple">–:––.–––</b></div>
+      <div><span>Sector</span><b id="sector">S1</b></div>
+      <div><span>Conditions</span><b id="weatherReadout">DRY</b></div>
+      <div><span>Track grip</span><b id="gripReadout">100%</b></div>
+      <div><span>Fuel</span><b id="fuelReadout">40.0 kg</b></div>
+      <div><span>Tyres</span><b id="tyreReadout">MED 100%</b></div>
+      <div><span>ERS</span><b id="ersReadout">4.0 MJ · OFF</b></div>
+      <div><span>DRS</span><b id="drsReadout">UNAVAILABLE</b></div>
+      <div><span>Safety Car</span><b id="safetyReadout">CLEAR</b></div>
+      <div><span>Damage</span><b id="damageReadout">0%</b></div>
+    </div>
+
+    <!-- Reference Circular F1 Speedometer -->
+    <div id="dash" class="f1-speedo">
+      <svg viewBox="0 0 240 240" class="speedo-svg" aria-label="Speedometer">
+        <circle cx="120" cy="120" r="114" fill="#6f7276" />
+        <circle cx="120" cy="120" r="102" fill="none" stroke="#0b5ed7" stroke-width="22"
+                stroke-dasharray="480 641" stroke-dashoffset="0" transform="rotate(135 120 120)" />
+        <g fill="#ffffff" font-family="Barlow Condensed, sans-serif" font-size="13" font-weight="700" text-anchor="middle">
+          <text x="48" y="196">0</text>
+          <text x="19" y="124">60</text>
+          <text x="47" y="52">120</text>
+          <text x="120" y="23">180</text>
+          <text x="193" y="52">240</text>
+          <text x="220" y="124">300</text>
+          <text x="192" y="196">360</text>
+        </g>
+        <circle id="throttleArc" cx="120" cy="120" r="78" fill="none" stroke="#0fa618" stroke-width="18"
+                stroke-dasharray="0 490" transform="rotate(135 120 120)" />
+        <circle id="brakeArc" cx="120" cy="120" r="78" fill="none" stroke="#d90f0f" stroke-width="18"
+                stroke-dasharray="0 490" transform="rotate(315 120 120)" />
+        <text id="speedVal" x="120" y="102" fill="#fff" font-size="44" font-weight="800" text-anchor="middle">0</text>
+        <text x="120" y="120" fill="#e6e9ed" font-size="14" font-weight="700" text-anchor="middle">KMH</text>
+        <text id="rpmVal" x="120" y="148" fill="#fff" font-size="24" font-weight="700" text-anchor="middle">3500</text>
+        <text x="120" y="164" fill="#e6e9ed" font-size="13" font-weight="700" text-anchor="middle">RPM</text>
+        <rect id="drsBg" x="92" y="174" width="56" height="22" rx="6" fill="#2c323a" />
+        <text x="120" y="190" fill="#fff" font-size="15" font-weight="800" text-anchor="middle">DRS</text>
+        <text x="104" y="220" fill="#e6e9ed" font-size="13" font-weight="700" text-anchor="middle">GEAR</text>
+        <text id="gearVal" x="136" y="222" fill="#fff" font-size="22" font-weight="800" text-anchor="middle">N</text>
+      </svg>
+    </div>
+
+    <!-- Manual Pitstop Mini-Game Overlay -->
+    <div id="pitMiniGame" class="pit-minigame gone">
+      <p>MANUAL PITSTOP · PRESS <b>SPACE</b> IN THE GREEN ZONE</p>
+      <div class="pit-bar">
+        <div class="pit-zone"></div>
+        <div id="pitCursor" class="pit-cursor"></div>
+      </div>
+    </div>
+
+    <canvas id="map" width="180" height="180"></canvas>
+    <div id="toast"></div>
+    <div id="cam">Cockpit</div>
+    <div id="driverTag"></div>
+    <div id="raceControls"><select id="pitTyreSelect" aria-label="Pit tyre compound"><option value="soft">PIT: SOFT</option><option value="medium" selected>PIT: MEDIUM</option><option value="hard">PIT: HARD</option></select><button id="pitButton">PIT · M</button><button id="ersButton">ERS · E</button><button id="drsButton">DRS · X</button><button id="haloButton">HALO · H</button><button id="pauseButton">PAUSE · P</button></div>
+    <nav id="touchControls" aria-label="Touch driving controls"><button data-touch="left">◀</button><button data-touch="brake">BRAKE</button><button data-touch="right">▶</button><button data-touch="throttle">GO</button><button id="touchCamera">CAM</button></nav>
+  </div>
+
+  <!-- Pause Menu (Escape) -->
+  <section id="pauseMenu" class="modal gone">
+    <div class="panel">
+      <p class="eyebrow">RACE PAUSED</p>
+      <h1>Paused</h1>
+      <button id="resumeButton" type="button">Resume Race</button>
+      <button id="pauseSettingsButton" class="secondary" type="button">Settings</button>
+      <button id="pauseHomeButton" class="secondary" type="button">Back to Home</button>
+    </div>
+  </section>
+
+  <!-- Finish Menu -->
+  <section id="finishMenu" class="modal gone"><div class="panel"><p class="eyebrow">CHEQUERED FLAG</p><h1 id="finishTitle">Race complete</h1><p id="finishSummary"></p><button id="againButton">Race again</button><button id="menuButton" class="secondary">Back to setup</button></div></section>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
