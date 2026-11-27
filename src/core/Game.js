@@ -12,11 +12,11 @@ import { EngineAudio } from '../audio/EngineAudio.js';
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const angleDelta = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 const TEAM_COLORS = [
-  { primary: '#28b7d2', secondary: '#f5f2e9', helmet: '#ffcc39' },
-  { primary: '#e54b45', secondary: '#20252c', helmet: '#ece5d8' },
-  { primary: '#ebbf3c', secondary: '#20252c', helmet: '#e84c43' },
-  { primary: '#8b6ee8', secondary: '#f5f2e9', helmet: '#64ce93' },
-  { primary: '#47a76a', secondary: '#20252c', helmet: '#f2e4b8' },
+  { primary: '#28b7d2', secondary: '#f5f2e9', helmet: '#ffcc39', number: 11, sponsor: 'VOLT' },
+  { primary: '#e54b45', secondary: '#20252c', helmet: '#ece5d8', number: 16, sponsor: 'APEX' },
+  { primary: '#ebbf3c', secondary: '#20252c', helmet: '#e84c43', number: 4, sponsor: 'TURBO' },
+  { primary: '#8b6ee8', secondary: '#f5f2e9', helmet: '#64ce93', number: 63, sponsor: 'AEROX' },
+  { primary: '#47a76a', secondary: '#20252c', helmet: '#f2e4b8', number: 14, sponsor: 'APEX' },
 ];
 
 export class Game {
@@ -57,6 +57,7 @@ export class Game {
     this.acc = 0;
     this.last = performance.now();
     this.frameId = 0;
+    this.prevMode = 'racing';
     this.resizeHandler = () => this.resize();
     addEventListener('resize', this.resizeHandler);
     this.resize();
@@ -65,11 +66,29 @@ export class Game {
 
   createOpponents() {
     const drivers = ['M. Riva', 'A. Novak', 'J. Kim', 'L. Sato', 'E. Silva'];
+    const maxLane = Math.min(3.6, this.track.width * 0.28);
+    const baseLanes = [-maxLane, maxLane, -maxLane * 0.85, maxLane * 0.85, 0];
     return drivers.map((name, i) => {
       const car = buildCar(TEAM_COLORS[i]);
       this.scene.add(car.group);
       const physics = new CarPhysics(28);
-      return { name, car, physics, lane: [-4.5, 4.5, -4.5, 4.5, 0][i], pace: [0.95, 0.99, 0.92, 1.02, 0.97][i], hint: -1, previousS: null, completedLaps: 0, progress: 0, tyreWear: 0 };
+      return {
+        name,
+        car,
+        physics,
+        baseLane: baseLanes[i],
+        lane: baseLanes[i],
+        targetLane: baseLanes[i],
+        pace: [0.95, 0.99, 0.92, 1.02, 0.97][i],
+        hint: -1,
+        previousS: null,
+        sectorsHit: 0,
+        completedLaps: 0,
+        progress: 0,
+        tyreWear: 0,
+        stuckTimer: 0,
+        drs: false,
+      };
     });
   }
 
@@ -92,15 +111,26 @@ export class Game {
       this.hint = start;
     }
 
+    const spacing = Math.max(10, Math.min(14, this.track.length / 60));
     this.ai.forEach((driver, i) => {
-      const index = (start - Math.floor((i + 1) * 9 / this.track.step) + this.track.N) % this.track.N;
+      const index = (start - Math.floor((i + 1) * spacing / this.track.step) + this.track.N) % this.track.N;
       const q = this.track.samples[index], r = this.track.rights[index], tangent = this.track.tangents[index];
+      driver.lane = driver.baseLane;
+      driver.targetLane = driver.baseLane;
       driver.physics.reset(q.x + r.x * driver.lane, q.z + r.z * driver.lane, Math.atan2(tangent.z, tangent.x));
-      driver.hint = index; driver.previousS = null; driver.completedLaps = 0; driver.progress = 0; driver.tyreWear = 0;
+      driver.hint = index;
+      driver.previousS = null;
+      driver.sectorsHit = 0;
+      driver.completedLaps = 0;
+      driver.progress = -((i + 1) * spacing);
+      driver.tyreWear = 0;
+      driver.stuckTimer = 0;
+      driver.drs = false;
     });
 
-    this.mode = 'countdown'; this.t = 0; this.raceTime = 0; this.lapStart = 0;
-    this.lap = 1; this.lastLap = null; this.bestLap = null; this.sectorsHit = 7; this.prevS = null; this.sector = 0;
+    this.mode = 'countdown'; this.prevMode = 'countdown';
+    this.t = 0; this.raceTime = 0; this.lapStart = 0;
+    this.lap = 1; this.lastLap = null; this.bestLap = null; this.sectorsHit = 0; this.prevS = null; this.sector = 0;
     this.pitTimer = 0; this.pitUsed = false; this.pitCompound = this.setup.tyre;
     this.pitMiniGame = { active: false, cursor: 0, dir: 1 };
     document.getElementById('pitMiniGame')?.classList.add('gone');
@@ -149,17 +179,24 @@ export class Game {
   }
 
   togglePause() {
-    if (this.mode === 'paused') this.resume();
-    else if (this.mode === 'racing' || this.mode === 'countdown') {
+    const settingsOpen = !document.getElementById('menu')?.classList.contains('gone');
+    if (settingsOpen) return;
+
+    if (this.mode === 'paused') {
+      this.resume();
+    } else if (this.mode === 'racing' || this.mode === 'countdown') {
+      this.prevMode = this.mode;
       this.mode = 'paused';
-      document.getElementById('pauseMenu').classList.remove('gone');
+      document.getElementById('pauseMenu')?.classList.remove('gone');
     }
   }
 
   resume() {
     if (this.mode !== 'paused') return;
-    this.mode = 'racing';
-    document.getElementById('pauseMenu').classList.add('gone');
+    this.mode = this.prevMode || 'racing';
+    document.getElementById('pauseMenu')?.classList.add('gone');
+    document.getElementById('menu')?.classList.add('gone');
+    document.getElementById('hud').hidden = false;
     this.last = performance.now();
   }
 
@@ -425,46 +462,125 @@ export class Game {
     }, { grip: this.surfaceGrip(info.lateral, 0, 'medium', info.s) });
   }
 
+  _cornerSpeedLimit(index, grip) {
+    const N = this.track.N, step = this.track.step;
+    let maxCurvature = 0;
+    for (const dist of [35, 70, 110]) {
+      const i1 = (index + Math.floor(dist / step)) % N;
+      const i2 = (index + Math.floor((dist + 18) / step)) % N;
+      const t1 = this.track.tangents[i1], t2 = this.track.tangents[i2];
+      const dTheta = Math.abs(angleDelta(Math.atan2(t2.z, t2.x), Math.atan2(t1.z, t1.x)));
+      const curvature = dTheta / 18;
+      if (curvature > maxCurvature) maxCurvature = curvature;
+    }
+    if (maxCurvature < 0.003) return 92;
+    return clamp(Math.sqrt((grip * 14.5) / maxCurvature), 20, 92);
+  }
+
   updateOpponents(dt) {
     const L = this.track.length;
+    const safeLaneLimit = Math.max(1.2, this.track.width * 0.34);
+    const playerInfo = this.track.query(this.physics.s.x, this.physics.s.z, this.hint);
+    const allCars = [
+      { s: playerInfo.s, lateral: playerInfo.lateral, speed: this.physics.speed, ref: null },
+      ...this.ai.map(d => {
+        const di = this.track.query(d.physics.s.x, d.physics.s.z, d.hint);
+        return { s: di.s, lateral: di.lateral, speed: d.physics.speed, ref: d };
+      }),
+    ];
+
     for (const driver of this.ai) {
       const phys = driver.physics, s = phys.s;
-      const info = this.track.query(s.x, s.z, driver.hint); driver.hint = info.index;
-      const next = Math.max(5, Math.floor((24 + phys.speed * 0.45) / this.track.step));
-      const targetIndex = (info.index + next) % this.track.N;
+      const info = this.track.query(s.x, s.z, driver.hint);
+      driver.hint = info.index;
+
+      if (this.mode === 'racing') {
+        if (phys.speed < 2.5) driver.stuckTimer += dt;
+        else driver.stuckTimer = 0;
+        if (driver.stuckTimer > 2.2) {
+          const recIdx = (info.index + 2) % this.track.N;
+          const rp = this.track.samples[recIdx], rt = this.track.tangents[recIdx];
+          phys.reset(rp.x, rp.z, Math.atan2(rt.z, rt.x));
+          phys.s.vx = 10;
+          driver.stuckTimer = 0;
+          driver.lane = 0;
+          driver.targetLane = 0;
+        }
+      }
+
+      let desiredLane = driver.baseLane;
+      let aheadSpeedCap = Infinity;
+      for (const other of allCars) {
+        if (other.ref === driver) continue;
+        let ds = other.s - info.s;
+        if (ds < -L * 0.5) ds += L;
+        if (ds > 2 && ds < 24 && Math.abs(other.lateral - info.lateral) < 2.8) {
+          const passDir = other.lateral >= 0 ? -1 : 1;
+          desiredLane = clamp(other.lateral + passDir * 3.4, -safeLaneLimit, safeLaneLimit);
+          if (ds < 10 && Math.abs(other.lateral - info.lateral) < 2.1) {
+            aheadSpeedCap = Math.min(aheadSpeedCap, other.speed + 1.5);
+          }
+        }
+      }
+      driver.targetLane = clamp(desiredLane, -safeLaneLimit, safeLaneLimit);
+      driver.lane += (driver.targetLane - driver.lane) * Math.min(1, dt * 3.2);
+
+      const lookDist = clamp(16 + phys.speed * 0.36, 16, 48);
+      const targetIndex = (info.index + Math.max(4, Math.floor(lookDist / this.track.step))) % this.track.N;
       const target = this.track.samples[targetIndex], right = this.track.rights[targetIndex];
       const tx = target.x + right.x * driver.lane, tz = target.z + right.z * driver.lane;
-      const desired = Math.atan2(tz - s.z, tx - s.x), error = angleDelta(desired, s.th);
+      const desiredHeading = Math.atan2(tz - s.z, tx - s.x);
+      const error = angleDelta(desiredHeading, s.th);
+
+      const grip = this.surfaceGrip(info.lateral, driver.tyreWear, 'medium', info.s);
+      const cornerLimit = this._cornerSpeedLimit(info.index, grip);
+      const straightCap = (this.safetyCarTimer > 0 ? 23 : this.setup.weather === 'wet' ? 68 : 84) * driver.pace;
+      const targetSpeed = Math.min(straightCap, cornerLimit * driver.pace, aheadSpeedCap);
+
       const progress = driver.completedLaps * L + info.s;
       const drs = this.isDrsEligible(info.s, progress, phys.speed, this.ai.filter(other => other !== driver));
       driver.drs = drs;
-      const targetSpeed = (this.safetyCarTimer > 0 ? 23 : this.setup.weather === 'wet' ? 67 : 78) * driver.pace;
+
+      const steerGain = clamp(2.0 - phys.speed * 0.008, 1.15, 2.0);
       const input = this.mode === 'racing' ? {
-        steer: clamp(error * 2.1 - s.r * 0.22, -1, 1),
-        throttle: clamp((targetSpeed - phys.speed) * 0.32, 0, 1),
-        brake: clamp((phys.speed - targetSpeed - 3) * 0.22, 0, 1),
+        steer: clamp(error * steerGain - s.r * 0.25, -1, 1),
+        throttle: phys.speed < targetSpeed ? clamp((targetSpeed - phys.speed) * 0.35, 0, 1) : 0,
+        brake: phys.speed > targetSpeed + 2 ? clamp((phys.speed - targetSpeed) * 0.14, 0, 1) : 0,
         drs,
       } : { throttle: 0, brake: 1, steer: 0 };
-      phys.step(dt, input, { grip: this.surfaceGrip(info.lateral, driver.tyreWear, 'medium', info.s) });
+
+      phys.step(dt, input, { grip });
       this.handleBarrier(phys, info);
       driver.tyreWear = clamp(driver.tyreWear + phys.speed * dt * 0.00055, 0, 100);
-      const now = this.track.query(s.x, s.z, driver.hint); driver.hint = now.index;
-      if (driver.previousS != null && driver.previousS > L * 0.85 && now.s < L * 0.15) driver.completedLaps++;
-      driver.previousS = now.s; driver.progress = driver.completedLaps * L + now.s;
+
+      const now = this.track.query(s.x, s.z, driver.hint);
+      driver.hint = now.index;
+      const sec = Math.floor((now.s / L) * 3);
+      driver.sectorsHit |= 1 << sec;
+      if (driver.previousS != null && driver.previousS > L * 0.85 && now.s < L * 0.15) {
+        if (driver.sectorsHit === 7) driver.completedLaps++;
+        driver.sectorsHit = 1 << sec;
+      }
+      driver.previousS = now.s;
+      driver.progress = driver.completedLaps * L + now.s;
     }
   }
 
   laps(sd) {
     const L = this.track.length;
-    this.sector = Math.floor((sd / L) * 3); this.sectorsHit |= 1 << this.sector;
+    this.sector = Math.floor((sd / L) * 3);
+    this.sectorsHit |= 1 << this.sector;
     if (this.prevS !== null && this.prevS > L * 0.85 && sd < L * 0.15) {
       if (this.sectorsHit === 7 && this.mode === 'racing') {
-        const lt = this.raceTime - this.lapStart; this.lastLap = lt;
+        const lt = this.raceTime - this.lapStart;
+        this.lastLap = lt;
         this.bestLap = this.bestLap == null ? lt : Math.min(this.bestLap, lt);
         this.hud.toast(lt === this.bestLap ? `Best lap ${fmt(lt)}` : `Lap ${fmt(lt)}`);
-        this.lap++; if (this.lap > this.setup.laps) this.finishRace();
+        this.lap++;
+        if (this.lap > this.setup.laps) this.finishRace();
       }
-      this.lapStart = this.raceTime; this.sectorsHit = 1 << this.sector;
+      this.lapStart = this.raceTime;
+      this.sectorsHit = 1 << this.sector;
     }
     this.prevS = sd;
   }

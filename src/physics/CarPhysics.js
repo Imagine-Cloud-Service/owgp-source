@@ -31,21 +31,22 @@ export class CarPhysics {
     let Fx = 0;
     if (input.throttle > 0) {
       const Fpower = (P.power + (input.ersPower || 0)) / Math.max(vAbs, 5);
-      Fx += input.throttle * Math.min(Fpower, grip * Fzr * 0.98);
+      Fx += input.throttle * Math.min(Fpower, grip * Fzr * 0.95);
     }
     if (input.brake > 0) {
-      const Fb = input.brake * Math.min(P.brakeMax, grip * (Fzf + Fzr) * 0.98);
+      const Fb = input.brake * Math.min(P.brakeMax, grip * (Fzf + Fzr) * 0.95);
       Fx -= Math.tanh(s.vx * 4) * Fb;
     }
     const dragArea = P.CdA * (input.drs ? 0.78 : 1);
     const Fres = -Math.tanh(s.vx * 5) * (0.5 * P.rho * dragArea * s.vx * s.vx + P.rolling * m * g);
-    // friction circle: using grip for engine/brakes leaves less for cornering
-    const ux = clamp(Math.abs(Fx) / (grip * (Fzf + Fzr)), 0, 0.92);
-    const latScale = Math.sqrt(1 - ux * ux) * Math.min(1, vAbs / 2);
+
+    // Gentler friction circle so throttle/braking doesn't wipe out cornering grip
+    const ux = clamp(Math.abs(Fx) / (grip * (Fzf + Fzr)), 0, 0.72);
+    const latScale = Math.sqrt(1 - ux * ux * 0.65) * Math.min(1, vAbs / 2);
 
     // --- lateral (tyre slip angles) ---
     const sg = s.vx >= 0 ? 1 : -1;
-    const vxe = Math.max(vAbs, 3);
+    const vxe = Math.max(vAbs, 4);
     const af = Math.atan2(sg * (s.vy + a * s.r), vxe) - sg * s.delta;
     const ar = Math.atan2(sg * (s.vy - b * s.r), vxe);
     const tyre = (alpha, Fz, k) => -sg * grip * Fz * Math.tanh(k * alpha / P.mu) * latScale;
@@ -54,10 +55,17 @@ export class CarPhysics {
     const cd = Math.cos(s.delta), sd = Math.sin(s.delta);
     s.ax = (Fx + Fres - Fyf * sd) / m;
     s.ay = (Fyf * cd + Fyr) / m;
+
     const vxN = s.vx + (s.ax + s.vy * s.r) * dt;
-    const vyN = s.vy + (s.ay - s.vx * s.r) * dt;
-    s.r += ((a * Fyf * cd - b * Fyr) / P.Iz) * dt;
-    s.vx = vxN; s.vy = vyN;
+    let vyN = s.vy + (s.ay - s.vx * s.r) * dt;
+
+    // Yaw & lateral damping to prevent endless drifting
+    const yawTorque = a * Fyf * cd - b * Fyr - s.r * (P.Iz * 1.8);
+    s.r += (yawTorque / P.Iz) * dt;
+    vyN *= Math.exp(-3.5 * dt);
+
+    s.vx = vxN;
+    s.vy = vyN;
     s.th += s.r * dt;
     const c = Math.cos(s.th), n = Math.sin(s.th);
     s.x += (s.vx * c - s.vy * n) * dt;

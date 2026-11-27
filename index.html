@@ -2,14 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Open-Wheel Grand Prix</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <!-- 3-Stage Splash Screen -->
+  <div id="splashScreen" class="splash-screen" aria-label="Intro splash screen">
+    <div class="splash-slide" data-slide="0">
+      <svg class="splash-svg" viewBox="0 0 100 100" width="86" height="86" aria-hidden="true">
+        <polygon points="50,8 92,84 8,84" fill="none" stroke="#ffffff" stroke-width="4" />
+        <polygon points="50,28 74,74 26,74" fill="none" stroke="#e03a3e" stroke-width="3.5" />
+        <polygon points="50,48 61,68 39,68" fill="#ffffff" />
+      </svg>
+      <p class="splash-sub">POWERED BY</p>
+      <h2 class="splash-title">THREE.JS <span>ENGINE</span></h2>
+    </div>
+
+    <div class="splash-slide" data-slide="1">
+      <img
+        class="studio-logo-img"
+        src="./assets/editerpro-logo.png"
+        alt="EditerPro Entertainments Logo"
+      />
+      <h2 class="splash-title">EDITERPRO <span>ENTERTAINMENTS</span></h2>
+      <p class="splash-sub">PRESENTS</p>
+    </div>
+
+    <div class="splash-slide" data-slide="2">
+      <div class="game-badge">OW</div>
+      <h2 class="splash-title game-logo-title">OPEN WHEEL</h2>
+      <p class="splash-game-sub">GRAND PRIX</p>
+    </div>
+
+    <span class="splash-skip">Click or press any key to skip</span>
+  </div>
+
   <div id="garagePreview" aria-hidden="true"></div>
   <div id="app"></div>
 
@@ -139,9 +170,10 @@
               </label>
               <label>CONTROLS
                 <select id="controlsMode">
-                  <option value="both">Keyboard + touch</option>
-                  <option value="keyboard">Keyboard / wheel</option>
-                  <option value="touch">Touch layout</option>
+                  <option value="auto" selected>Auto (Detect Device)</option>
+                  <option value="keyboard">Keyboard</option>
+                  <option value="controller">Controller (Gamepad)</option>
+                  <option value="touch">Touch</option>
                 </select>
               </label>
             </div>
@@ -164,7 +196,7 @@
             <button id="muteAudio" class="small-action" type="button" aria-pressed="false">MUTE AUDIO</button>
           </section>
         </div>
-        <p class="keys settings-keys">W/S accelerate &amp; brake · A/D steer · C cycle Cockpit / T-Cam · X DRS · E ERS · R reset · M pit · SPACE pitstop timing</p>
+        <p class="keys settings-keys">Keyboard: W/S pedals · A/D steer · C cam · X DRS · E ERS · R reset · M pit · SPACE pitstop | Controller: R2/L2 pedals · L-Stick steer · Y cam · RB DRS · LB ERS · Start pause</p>
       </section>
     </main>
   </section>
@@ -284,6 +316,13 @@
     <div id="cam">Cockpit</div>
     <div id="driverTag"></div>
     <div id="raceControls"><select id="pitTyreSelect" aria-label="Pit tyre compound"><option value="soft">PIT: SOFT</option><option value="medium" selected>PIT: MEDIUM</option><option value="hard">PIT: HARD</option></select><button id="pitButton">PIT · M</button><button id="ersButton">ERS · E</button><button id="drsButton">DRS · X</button><button id="haloButton">HALO · H</button><button id="pauseButton">PAUSE · P</button></div>
+
+    <div id="controlSwitcher" aria-label="Device and control mode switcher">
+      <span id="deviceInfoBadge">DETECTING...</span>
+      <button id="cycleControlBtn" type="button">CTRL: AUTO</button>
+      <button id="recenterTiltBtn" type="button" hidden>CENTER TILT</button>
+    </div>
+
     <nav id="touchControls" aria-label="Touch driving controls"><button data-touch="left">◀</button><button data-touch="brake">BRAKE</button><button data-touch="right">▶</button><button data-touch="throttle">GO</button><button id="touchCamera">CAM</button></nav>
   </div>
 

@@ -6,15 +6,15 @@ export const PHYSICS = {
   a: 1.75,            // front axle to CG (m)
   b: 1.65,            // rear axle to CG (m)
   rho: 1.225,         // air density (kg/m^3)
-  ClA: 3.6,           // downforce coeff * area
+  ClA: 4.4,           // stronger F1 downforce
   CdA: 1.05,          // drag coeff * area
-  aeroFront: 0.44,    // front downforce balance
-  mu: 1.85,           // peak tyre friction
-  kf: 16,             // front cornering stiffness
-  kr: 18,             // rear cornering stiffness
+  aeroFront: 0.42,    // slightly more rear downforce to prevent oversteer
+  mu: 2.15,           // higher peak tyre friction
+  kf: 22,             // sharper front turn-in
+  kr: 28,             // planted rear axle (stops tail-out drifting)
   rolling: 0.015,     // rolling resistance
   maxSteer: 0.45,     // max steering angle (rad)
-  steerFade: 32,      // speed-sensitive steering fade (m/s)
+  steerFade: 28,      // calmer steering at high speed (m/s)
   power: 740000,      // engine power (W)
   brakeMax: 32000,    // max braking force (N)
   idleRpm: 3500,

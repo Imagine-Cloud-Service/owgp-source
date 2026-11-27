@@ -13,9 +13,11 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--asphalt);
   color: var(--paper);
   font-family: var(--b);
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app, #app canvas,
@@ -25,6 +27,7 @@ html, body {
   width: 100%;
   height: 100%;
   display: block;
+  touch-action: none;
 }
 #garagePreview { z-index: 0; background: #101820; }
 
@@ -32,7 +35,7 @@ html, body {
 #menu {
   position: fixed;
   inset: 0;
-  z-index: 5;
+  z-index: 15;
   display: block;
   width: 100vw;
   height: 100vh;
@@ -73,7 +76,7 @@ html, body {
 .menu-pages {
   width: 100%;
   min-height: 100vh;
-  padding: 28px clamp(18px, 3vw, 48px);
+  padding: max(28px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
 }
 .menu-page { display: none; max-width: 1120px; margin: 0 auto; }
 .menu-page.active { display: block; }
@@ -120,8 +123,8 @@ html, body {
 
 .home-buttons {
   position: absolute;
-  left: clamp(24px, 4vw, 56px);
-  bottom: clamp(36px, 8vh, 80px);
+  left: max(24px, env(safe-area-inset-left));
+  bottom: max(36px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -152,8 +155,8 @@ html, body {
 
 .home-version {
   position: absolute;
-  right: clamp(16px, 2.5vw, 32px);
-  bottom: clamp(12px, 2vh, 22px);
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
   font: 600 15px var(--b);
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.04em;
@@ -220,6 +223,8 @@ button {
   font: 800 22px var(--f);
   text-transform: uppercase;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 }
 button:hover, button:focus-visible { background: #f0484c; outline: 2px solid var(--paper); outline-offset: 2px; }
 
@@ -259,11 +264,12 @@ button:hover, button:focus-visible { background: #f0484c; outline: 2px solid var
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 8;
+  z-index: 25;
   display: grid;
   place-items: center;
   background: #081018b8;
   backdrop-filter: blur(7px);
+  pointer-events: auto !important;
 }
 .modal.gone { display: none; }
 .panel {
@@ -274,7 +280,9 @@ button:hover, button:focus-visible { background: #f0484c; outline: 2px solid var
   border-left: 6px solid var(--kerb);
   background: rgba(12, 20, 27, 0.94);
   box-shadow: 0 24px 90px #0009;
+  pointer-events: auto;
 }
+.modal button { pointer-events: auto; }
 .modal .secondary { margin-top: 10px; background: transparent; border: 1px solid #536473; font-size: 17px; }
 
 .circuit-modal-card {
@@ -314,9 +322,9 @@ button:hover, button:focus-visible { background: #f0484c; outline: 2px solid var
 @keyframes modalPop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
 /* HUD */
-#hud { position: fixed; inset: 0; pointer-events: none; font-family: var(--f); }
+#hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; font-family: var(--f); }
 #hud[hidden] { display: none; }
-#timing { position: absolute; top: 16px; left: 16px; display: grid; gap: 2px; background: rgba(16, 24, 32, 0.78); padding: 10px 14px; min-width: 190px; max-height: 72vh; overflow: auto; }
+#timing { position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); display: grid; gap: 2px; background: rgba(16, 24, 32, 0.78); padding: 10px 14px; min-width: 190px; max-height: 72vh; overflow: auto; }
 #timing div { display: flex; justify-content: space-between; gap: 18px; font-size: 20px; }
 #timing span { color: #9fb0bf; font-weight: 500; }
 #timing b { font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -325,8 +333,8 @@ button:hover, button:focus-visible { background: #f0484c; outline: 2px solid var
 /* Reference Circular F1 Speedometer */
 #dash.f1-speedo {
   position: absolute;
-  right: 20px;
-  bottom: 72px;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(72px, env(safe-area-inset-bottom));
   width: 210px;
   height: 210px;
   padding: 0;
@@ -355,45 +363,169 @@ button:hover, button:focus-visible { background: #f0484c; outline: 2px solid var
 .pit-zone { position: absolute; left: 42%; width: 16%; height: 100%; background: var(--go); }
 .pit-cursor { position: absolute; left: 0%; width: 4%; height: 100%; background: #ffffff; }
 
-#map { position: absolute; right: 16px; top: 16px; background: rgba(16, 24, 32, 0.6); width: 150px; height: 150px; }
-#cam { position: absolute; left: 16px; bottom: 16px; font-size: 18px; color: #9fb0bf; background: rgba(16, 24, 32, 0.6); padding: 4px 10px; }
+#map { position: absolute; right: max(16px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); background: rgba(16, 24, 32, 0.6); width: 150px; height: 150px; }
+#cam { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); font-size: 18px; color: #9fb0bf; background: rgba(16, 24, 32, 0.6); padding: 4px 10px; }
 #lights { position: absolute; top: 18%; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; opacity: 0; transition: opacity 0.2s; }
 #lights.on { opacity: 1; }
 #lights i { width: 44px; height: 44px; border-radius: 50%; background: #2a1517; border: 3px solid #000; }
 #lights i.lit { background: var(--kerb); box-shadow: 0 0 22px var(--kerb); }
 #toast { position: absolute; top: 30%; left: 50%; transform: translateX(-50%); font: 800 44px var(--f); opacity: 0; transition: opacity 0.3s; text-transform: uppercase; text-align: center; }
 #toast.show { opacity: 1; }
-#raceControls { position: absolute; right: 16px; bottom: 18px; display: flex; align-items: center; gap: 6px; pointer-events: auto; z-index: 2; }
+#raceControls { position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 6px; pointer-events: auto; z-index: 2; }
 #raceControls button { width: auto; padding: 9px 10px; font-size: 15px; }
 #raceControls select { width: auto; max-width: 112px; margin: 0; padding: 8px 5px; font-size: 11px; }
 #raceControls button.active { background: #3ddc84; color: #102017; }
 #raceControls button:disabled { opacity: 0.42; cursor: not-allowed; }
-#driverTag { position: absolute; left: 16px; bottom: 54px; padding: 5px 10px; background: #10182099; color: #dce5ec; font: 600 13px var(--b); letter-spacing: 0.06em; }
+#driverTag { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: max(54px, env(safe-area-inset-bottom)); padding: 5px 10px; background: #10182099; color: #dce5ec; font: 600 13px var(--b); letter-spacing: 0.06em; }
+
+/* On-Screen Device Badge & Control Mode Switcher */
+#controlSwitcher {
+  position: absolute;
+  left: 50%;
+  bottom: max(144px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  z-index: 4;
+  background: rgba(12, 18, 26, 0.82);
+  border: 1px solid #ffffff22;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+#deviceInfoBadge {
+  font: 700 11px var(--f);
+  letter-spacing: 0.08em;
+  color: #9fb0bf;
+  white-space: nowrap;
+}
+#controlSwitcher button {
+  width: auto;
+  padding: 4px 10px;
+  font: 700 12px var(--f);
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  background: #1d2b38;
+}
+#controlSwitcher button:hover,
+#controlSwitcher button:focus-visible {
+  background: var(--kerb);
+}
 
 /* Touch & Responsive */
-body[data-controls="keyboard"] #touchControls { display: none !important; }
-body[data-controls="touch"] #touchControls { display: flex !important; }
-#touchControls { display: none; position: absolute; left: 14px; right: 14px; bottom: 72px; justify-content: space-between; align-items: center; pointer-events: none; }
-#touchControls button { pointer-events: auto; width: 54px; padding: 0; height: 54px; border-radius: 50%; font-size: 14px; touch-action: none; }
-#touchControls button[data-touch=brake], #touchControls button[data-touch=throttle] { width: 62px; font-size: 12px; }
+body[data-control-mode="keyboard"] #touchControls { display: none !important; }
+body[data-control-mode="touch"] #touchControls,
+body[data-control-mode="tilt"] #touchControls { display: flex !important; }
+#touchControls { display: none; position: absolute; left: max(14px, env(safe-area-inset-left)); right: max(14px, env(safe-area-inset-right)); bottom: max(72px, env(safe-area-inset-bottom)); justify-content: space-between; align-items: center; pointer-events: none; z-index: 3; }
+#touchControls button { pointer-events: auto; width: 56px; padding: 0; height: 56px; border-radius: 50%; font-size: 14px; touch-action: none; }
+#touchControls button.active { background: #3ddc84; color: #102017; transform: scale(0.95); }
+#touchControls button[data-touch=brake], #touchControls button[data-touch=throttle] { width: 64px; font-size: 12px; }
 #touchControls button[data-touch=throttle] { background: #3ddc84; color: #102017; }
-#touchControls button#touchCamera { width: 44px; height: 44px; background: #243241; font-size: 12px; }
+#touchControls button#touchCamera { width: 46px; height: 46px; background: #243241; font-size: 12px; }
+
+/* --- 3-Stage Splash Screen --- */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, #141d28 0%, #070a0f 80%);
+  transition: opacity 0.6s ease;
+  cursor: pointer;
+}
+.splash-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash-slide {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.55s ease, transform 0.65s ease;
+  pointer-events: none;
+}
+.splash-slide.active {
+  opacity: 1;
+  transform: scale(1);
+}
+.splash-sub {
+  margin: 0;
+  font: 700 14px var(--f);
+  letter-spacing: 0.28em;
+  color: #9fb0bf;
+}
+.splash-title {
+  margin: 0;
+  font: 800 clamp(36px, 5.5vw, 68px)/0.95 var(--f);
+  letter-spacing: 0.06em;
+  color: #ffffff;
+}
+.splash-title span { color: var(--kerb); }
+.studio-badge,
+.game-badge {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 74px;
+  background: var(--kerb);
+  color: #ffffff;
+  font: 800 38px var(--f);
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 40px rgba(224, 58, 62, 0.45);
+}
+.studio-badge {
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e03a3e, #9c191d);
+}
+.studio-logo-img {
+  width: clamp(110px, 16vw, 170px);
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.25));
+}
+.game-logo-title {
+  font-size: clamp(54px, 8vw, 96px);
+  letter-spacing: 0.02em;
+}
+.splash-game-sub {
+  margin: 0;
+  font: 700 clamp(24px, 3.2vw, 40px)/1 var(--f);
+  letter-spacing: 0.22em;
+  color: var(--kerb);
+}
+.splash-skip {
+  position: absolute;
+  bottom: 24px;
+  font: 600 12px var(--b);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
 
 @media (max-width: 760px) {
-  .menu-pages { padding: 20px 16px; }
+  .menu-pages { padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
   #pageGarage.menu-page.active { width: 100%; }
   .settings-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
   #map { display: none; }
-  #timing { grid-template-columns: 1fr 1fr; width: min(360px, calc(100vw - 20px)); max-height: 44vh; top: 10px; left: 10px; padding: 7px 9px; }
+  #timing { grid-template-columns: 1fr 1fr; width: min(360px, calc(100vw - 20px)); max-height: 44vh; top: max(10px, env(safe-area-inset-top)); left: max(10px, env(safe-area-inset-left)); padding: 7px 9px; }
   #timing div { font-size: 14px; gap: 8px; }
   #touchControls { display: flex; }
-  #raceControls { bottom: 10px; right: 10px; left: 10px; justify-content: flex-end; gap: 4px; }
+  #controlSwitcher { bottom: max(136px, env(safe-area-inset-bottom)); }
+  #raceControls { bottom: max(10px, env(safe-area-inset-bottom)); right: max(10px, env(safe-area-inset-right)); left: max(10px, env(safe-area-inset-left)); justify-content: flex-end; gap: 4px; }
   #raceControls button { font-size: 10px; padding: 7px 6px; }
   #raceControls select { max-width: 72px; font-size: 9px; }
-  #dash.f1-speedo { right: 12px; bottom: 135px; width: 155px; height: 155px; }
-  #cam { bottom: 12px; left: 10px; }
-  #driverTag { left: 10px; bottom: 42px; font-size: 10px; }
+  #dash.f1-speedo { right: max(12px, env(safe-area-inset-right)); bottom: max(142px, env(safe-area-inset-bottom)); width: 145px; height: 145px; }
+  #cam { bottom: max(12px, env(safe-area-inset-bottom)); left: max(10px, env(safe-area-inset-left)); }
+  #driverTag { left: max(10px, env(safe-area-inset-left)); bottom: max(42px, env(safe-area-inset-bottom)); font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

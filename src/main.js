@@ -1,5 +1,6 @@
 import './style.css';
 import { Game } from './core/Game.js';
+import { detectDevice, resolveControlMode } from './core/Input.js';
 import { GaragePreview } from './vehicle/GaragePreview.js';
 import { TRACKS } from './config.js';
 
@@ -11,8 +12,19 @@ const presets = {
   midnight: ['#29234b', '#d3a943', '#15151b', '#d6ad4c', '#f6f0e4'],
 };
 
+const deviceInfo = detectDevice();
+document.body.dataset.device = deviceInfo.deviceType;
+document.body.dataset.touch = deviceInfo.hasTouch ? 'yes' : 'no';
+
 let game = null, audioMuted = false, openedSettingsFromPause = false;
 const controls = ['driver', 'team', 'driverNumber', 'presetLivery', 'paintFinish', 'sponsorLogo', 'cPrimary', 'cSecondary', 'cHalo', 'cRims', 'cHelmet', 'trackSelect', 'weatherSelect', 'lapsSelect', 'startMode', 'fuelSelect', 'tyreSelect', 'controlsMode', 'screenSize', 'viewDistance', 'baseFov', 'gForce', 'steeringSensitivity', 'quality', 'audioVolume'];
+
+function applyModeDataset(mode) {
+  const selected = ['auto', 'keyboard', 'controller', 'touch'].includes(mode) ? mode : 'auto';
+  const active = resolveControlMode(selected, detectDevice());
+  document.body.dataset.controls = selected;
+  document.body.dataset.controlMode = active;
+}
 
 function livery() {
   return {
@@ -79,7 +91,7 @@ try {
       startMode: saved.startMode,
       fuelSelect: saved.fuelKg,
       tyreSelect: saved.tyre,
-      controlsMode: saved.controlsMode,
+      controlsMode: ['auto', 'keyboard', 'controller', 'touch'].includes(saved.controlsMode) ? saved.controlsMode : 'auto',
       screenSize: saved.screenSize,
       viewDistance: saved.viewDistance,
       baseFov: saved.horizontalFov,
@@ -104,9 +116,10 @@ function showPage(name) {
 
 document.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', e => {
   e.preventDefault();
-  if (b.dataset.page === 'home' && openedSettingsFromPause && game) {
+  if (b.dataset.page === 'home' && openedSettingsFromPause && (game || window.owgpGame)) {
     openedSettingsFromPause = false;
     $('menu').classList.add('gone');
+    $('hud').hidden = false;
     $('pauseMenu').classList.remove('gone');
     return;
   }
@@ -123,7 +136,7 @@ function syncLabels() {
   $('volumeValue').value = $('volumeValue').textContent = `${Math.round(Number($('audioVolume').value) * 100)}%`;
 }
 syncLabels();
-document.body.dataset.controls = $('controlsMode').value;
+applyModeDataset($('controlsMode').value);
 
 for (const id of controls) {
   const el = $(id);
@@ -133,10 +146,20 @@ for (const id of controls) {
     save();
     if (id === 'quality') preview.setQuality(el.value);
     if (['cPrimary', 'cSecondary', 'cHalo', 'cRims', 'cHelmet', 'driverNumber', 'paintFinish', 'sponsorLogo'].includes(id)) preview.updateCar(livery());
-    if (id === 'controlsMode') document.body.dataset.controls = el.value;
+    if (id === 'controlsMode') {
+      applyModeDataset(el.value);
+      if (game?.input && game.input.controlMode !== el.value) game.input.setControlMode(el.value, false);
+    }
     if (id === 'audioVolume') game?.audio.setVolume?.(el.value);
   });
-  el.addEventListener('change', () => { syncLabels(); save(); });
+  el.addEventListener('change', () => {
+    syncLabels();
+    save();
+    if (id === 'controlsMode') {
+      applyModeDataset(el.value);
+      if (game?.input && game.input.controlMode !== el.value) game.input.setControlMode(el.value, false);
+    }
+  });
 }
 
 $('muteAudio').setAttribute('aria-pressed', String(audioMuted));
@@ -180,7 +203,7 @@ function closeCircuitModal() {
 
 function returnToHome() {
   openedSettingsFromPause = false;
-  game?.stop();
+  (game || window.owgpGame)?.stop();
   game = null;
   window.owgpGame = null;
   $('hud').hidden = true;
@@ -217,16 +240,28 @@ circuitGrid.addEventListener('click', e => {
 });
 
 // --- Pause & Race Controls ---
-$('pauseButton').addEventListener('click', () => game?.togglePause());
-$('resumeButton').addEventListener('click', () => game?.resume());
+$('pauseButton')?.addEventListener('click', () => {
+  $('pauseButton').blur();
+  (game || window.owgpGame)?.togglePause();
+});
+$('resumeButton')?.addEventListener('click', () => {
+  $('resumeButton').blur();
+  openedSettingsFromPause = false;
+  (game || window.owgpGame)?.resume();
+});
 $('pauseSettingsButton')?.addEventListener('click', () => {
+  $('pauseSettingsButton').blur();
   openedSettingsFromPause = true;
   $('pauseMenu').classList.add('gone');
+  $('hud').hidden = true;
   $('menu').classList.remove('gone');
   showPage('settings');
 });
-$('pauseHomeButton')?.addEventListener('click', returnToHome);
-$('menuButton').addEventListener('click', returnToHome);
+$('pauseHomeButton')?.addEventListener('click', () => {
+  $('pauseHomeButton').blur();
+  returnToHome();
+});
+$('menuButton')?.addEventListener('click', returnToHome);
 
 $('pitButton').addEventListener('click', () => game?.requestPit());
 $('ersButton').addEventListener('click', () => { if (game) game.ersEnabled = !game.ersEnabled; });
@@ -237,3 +272,38 @@ $('drsButton').addEventListener('click', () => {
 });
 $('haloButton').addEventListener('click', () => { if (game) game.rig.toggleHalo(); });
 $('againButton').addEventListener('click', () => game?.restart());
+
+// --- 3-Stage Splash Screen Sequence ---
+(function runSplash() {
+  const splash = $('splashScreen');
+  if (!splash) return;
+
+  const slides = [...splash.querySelectorAll('.splash-slide')];
+  let index = 0;
+  let timer = null;
+  let done = false;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    window.removeEventListener('keydown', finish);
+    splash.classList.add('fade-out');
+    setTimeout(() => splash.remove(), 650);
+  };
+
+  const nextSlide = () => {
+    if (done) return;
+    slides.forEach((s, i) => s.classList.toggle('active', i === index));
+    if (index >= slides.length) {
+      finish();
+      return;
+    }
+    index++;
+    timer = setTimeout(nextSlide, 2100);
+  };
+
+  splash.addEventListener('click', finish);
+  window.addEventListener('keydown', finish, { once: true });
+  requestAnimationFrame(nextSlide);
+})();
